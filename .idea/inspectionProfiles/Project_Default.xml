@@ -1,0 +1,26 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="python-telegram-bot" />
+          <option value="python-dotenv" />
+          <option value="agno" />
+          <option value="streamlit" />
+          <option value="openai" />
+          <option value="python-docx" />
+          <option value="PyPDF2" />
+          <option value="pdf2image" />
+          <option value="easyocr" />
+          <option value="sentence-transformers" />
+          <option value="scikit-learn" />
+          <option value="duckduckgo-search" />
+          <option value="numpy" />
+          <option value="requests" />
+          <option value="sqlite3" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

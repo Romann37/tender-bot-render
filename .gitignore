@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.env
+tender_bot.db
+.DS_Store
