@@ -1,52 +1,48 @@
-import aiosqlite
 import json
+import os
 from datetime import datetime
 from config import DB_PATH
-
 
 class UserManager:
     def __init__(self):
         self.db_path = DB_PATH
-
-    async def init_db(self):
-        async with aiosqlite.connect(self.db_path) as db:
-            await db.execute('''
-                CREATE TABLE IF NOT EXISTS users (
-                    user_id INTEGER PRIMARY KEY,
-                    username TEXT,
-                    region TEXT DEFAULT '37',
-                    region_name TEXT DEFAULT 'Иваново',
-                    keywords TEXT DEFAULT '[]',
-                    auto_search INTEGER DEFAULT 0,
-                    notify_new INTEGER DEFAULT 1,
-                    min_price INTEGER DEFAULT 0,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            await db.commit()
-
-    async def get_user(self, user_id):
-        async with aiosqlite.connect(self.db_path) as db:
-            async with db.execute('SELECT * FROM users WHERE user_id = ?', (user_id,)) as cursor:
-                row = await cursor.fetchone()
-                if row:
-                    return dict(zip([desc[0] for desc in cursor.description], row))
-        return None
-
-    async def create_user(self, user_id, username):
-        async with aiosqlite.connect(self.db_path) as db:
-            await db.execute('''
-                INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)
-            ''', (user_id, username))
-            await db.commit()
-
-    async def update_user(self, user_id, **kwargs):
-        fields = ', '.join([f"{k}=?" for k in kwargs.keys()])
-        values = list(kwargs.values()) + [user_id]
-        async with aiosqlite.connect(self.db_path) as db:
-            await db.execute(f'UPDATE users SET {fields}, updated_at=CURRENT_TIMESTAMP WHERE user_id=?', values)
-            await db.commit()
-
+        self.users = self._load_users()
+    
+    def _load_users(self):
+        if os.path.exists(self.db_path):
+            try:
+                with open(self.db_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+    
+    def _save_users(self):
+        with open(self.db_path, 'w', encoding='utf-8') as f:
+            json.dump(self.users, f, ensure_ascii=False, indent=2)
+    
+    def get_user(self, user_id):
+        return self.users.get(str(user_id), {})
+    
+    def create_user(self, user_id, username):
+        user_id = str(user_id)
+        if user_id not in self.users:
+            self.users[user_id] = {
+                'username': username,
+                'region': '37',
+                'region_name': 'Иваново',
+                'auto_search': 0,
+                'keywords': [],
+                'created_at': datetime.now().isoformat()
+            }
+            self._save_users()
+    
+    def update_user(self, user_id, **kwargs):
+        user_id = str(user_id)
+        if user_id not in self.users:
+            self.create_user(user_id, 'Unknown')
+        self.users[user_id].update(kwargs)
+        self.users[user_id]['updated_at'] = datetime.now().isoformat()
+        self._save_users()
 
 db = UserManager()
