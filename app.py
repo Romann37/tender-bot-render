@@ -1,9 +1,13 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
+import asyncio
+import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-import asyncio
-import os
 from config import BOT_TOKEN
+
+# Логирование для отладки
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 application = Application.builder().token(BOT_TOKEN).build()
@@ -21,19 +25,28 @@ application.add_handler(CommandHandler("start", start))
 
 @app.route('/', methods=['POST'])
 def webhook():
-    """Правильная webhook обработка для Render"""
-    if not request.is_json:
+    try:
+        # Проверяем JSON
+        if not request.is_json:
+            return 'OK', 200
+        
+        json_data = request.get_json()
+        logger.info(f"Received update: {json_data}")
+        
+        # Создаем Update объект
+        update = Update.de_json(json_data, application.bot)
+        if update and update.to_dict():
+            # Запускаем обработку в новом event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(application.process_update(update))
+            loop.close()
+        
         return 'OK', 200
-    
-    update = Update.de_json(request.get_json(), application.bot)
-    if update:
-        # Правильный способ: в event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(application.process_update(update))
-        loop.close()
-    
-    return 'OK', 200
+        
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return 'ERROR', 500
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -42,3 +55,4 @@ def health():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=False)
+   
