@@ -6,6 +6,7 @@ load_dotenv()
 # Токены и настройки
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+MODEL_ID = os.getenv('MODEL_ID', 'anthropic/claude-3.5-sonnet:20241022')
 
 # Регионы РФ для поиска тендеров ЕИС
 REGIONS = {
