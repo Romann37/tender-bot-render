@@ -19,66 +19,60 @@ def start_command(message):
     
     bot.reply_to(message, 
         "🚀 Бот тендеров ЕИС 44-ФЗ/223-ФЗ готов!\n\n"
-        "👇 Нажмите кнопку для действия:",
+        "👇 Нажмите кнопку:",
         reply_markup=markup)
 
-# 🔥 ОБРАБОТЧИКИ ТОЧНО ПО ВАШИМ КНОПКАМ:
-@bot.message_handler(func=lambda m: 'Подписки' in m.text)
-def subscription_handler(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn_back = types.KeyboardButton('🔙 Главное меню')
-    markup.add(btn_back)
-    bot.reply_to(message, 
-        "🔔 Подписки на тендеры\n\n"
-        "📍 Выберите регион:\n"
-        "• /1 — Адыгея\n"
-        "• /77 — Москва\n"
-        "• /moscow — Москва\n"
-        "• /spb — СПб",
-        reply_markup=markup)
-
-@bot.message_handler(func=lambda m: 'Поиск тендеров' in m.text)
-def search_handler(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn_back = types.KeyboardButton('🔙 Главное меню')
-    markup.add(btn_back)
-    bot.reply_to(message, 
-        "🔍 Поиск тендеров\n\n"
-        "💬 Введите:\n"
-        "• moscow — Москва\n"
-        "• 77 — Москва\n"
-        "• 44fz — только 44-ФЗ\n"
-        "• здание — обследование зданий",
-        reply_markup=markup)
-
-@bot.message_handler(func=lambda m: 'обследование зданий' in m.text)
-def buildings_handler(message):
-    bot.reply_to(message, 
-        "🏢 Тендеры 'обследование зданий'\n\n"
-        "🔄 Ищем по ЕИС 44-ФЗ/223-ФЗ...\n"
-        "• ОКПД2: 71.12.45\n"
-        "• Ключевые слова: обследование, здание\n\n"
-        "⏳ Результаты через 10 сек...")
-
-@bot.message_handler(func=lambda m: 'Помощь' in m.text)
-def help_handler(message):
-    bot.reply_to(message, 
-        "❓ Помощь:\n\n"
-        "🔔 Подписки — уведомления 24/7\n"
-        "🔍 Поиск — найти тендеры\n"
-        "🏢 обследование зданий — спец. поиск\n"
-        "📊 Статистика — цифры по РФ\n\n"
-        "💬 Примеры: /moscow /1 /44fz")
-
-@bot.message_handler(func=lambda m: '🔙 Главное меню' in m.text)
-def back_menu(message):
-    start_command(message)
-
-# Дополнительные команды
-@bot.message_handler(commands=['moscow', '1', '77'])
-def region_command(message):
-    region = message.text[1:]
-    bot.reply_to(message, f"🔍 Тендеры {region} загружаем...")
+# 🔥 ЕДИНСТВЕННЫЙ ОБРАБОТЧИК ВСЕГО ТЕКСТА
+@bot.message_handler(content_types=['text'])
+def handle_all_text(message):
+    text = message.text.lower()
+    
+    # Главное меню
+    if '/start' in text or text == '/start':
+        start_command(message)
+        
+    # Кнопки меню (ТОЧНЫЕ названия из вашего скрина)
+    elif 'подписки' in text:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn_back = types.KeyboardButton('🔙 Главное меню')
+        markup.add(btn_back)
+        bot.reply_to(message, 
+            "🔔 Подписки на тендеры\n\n"
+            "📍 Регионы:\n/1 - Адыгея\n/77 - Москва\n/moscow",
+            reply_markup=markup)
+    
+    elif 'поиск тендеров' in text:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn_back = types.KeyboardButton('🔙 Главное меню')
+        markup.add(btn_back)
+        bot.reply_to(message, 
+            "🔍 Поиск тендеров\n\n"
+            "💬 Введите: moscow /1 /77 /44fz",
+            reply_markup=markup)
+    
+    elif 'обследование зданий' in text:
+        bot.reply_to(message, 
+            "🏢 Тендеры 'обследование зданий'\n\n"
+            "✅ ОКПД2: 71.12.45\n"
+            "✅ 44-ФЗ/223-ФЗ\n"
+            "🔄 Поиск по ЕИС...")
+    
+    elif 'помощь' in text:
+        bot.reply_to(message, 
+            "❓ Помощь:\n\n"
+            "🔔 Подписки\n🔍 Поиск тендеров\n"
+            "🏢 обследование зданий\n📊 Статистика")
+    
+    elif '🔙 главное меню' in text:
+        start_command(message)
+    
+    # Регионы и ключевые слова
+    elif any(x in text for x in ['moscow', '77', '1']):
+        bot.reply_to(message, f"🔍 Тендеры {text} загружаем...")
+    
+    else:
+        # Эхо для отладки
+        bot.reply_to(message, f"Получено: {text}\nПопробуйте кнопки меню")
 
 @app.route('/', methods=['POST'])
 def webhook():
