@@ -2,7 +2,7 @@ from flask import Flask, request, abort
 import telebot
 from telebot import types
 import os
-from config import BOT_TOKEN, OPENROUTER_API_KEY
+from config import BOT_TOKEN
 
 app = Flask(__name__)
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -11,75 +11,74 @@ bot = telebot.TeleBot(BOT_TOKEN)
 @bot.message_handler(commands=['start'])
 def start_command(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    btn1 = types.KeyboardButton('🔔 Подписка')
+    btn1 = types.KeyboardButton('🔔 Подписки')
     btn2 = types.KeyboardButton('🔍 Поиск тендеров')
-    btn3 = types.KeyboardButton('📊 Статистика')
+    btn3 = types.KeyboardButton('📊 обследование зданий')
     btn4 = types.KeyboardButton('❓ Помощь')
     markup.add(btn1, btn2, btn3, btn4)
     
     bot.reply_to(message, 
         "🚀 Бот тендеров ЕИС 44-ФЗ/223-ФЗ готов!\n\n"
-        "Выберите действие из меню:",
+        "👇 Нажмите кнопку для действия:",
         reply_markup=markup)
 
-# Обработчики кнопок меню
-@bot.message_handler(func=lambda message: message.text == '🔔 Подписка')
+# 🔥 ОБРАБОТЧИКИ ТОЧНО ПО ВАШИМ КНОПКАМ:
+@bot.message_handler(func=lambda m: 'Подписки' in m.text)
 def subscription_handler(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn_back = types.KeyboardButton('🔙 Назад в меню')
+    btn_back = types.KeyboardButton('🔙 Главное меню')
     markup.add(btn_back)
     bot.reply_to(message, 
-        "🔔 Подписка на тендеры\n\n"
-        "Введите номер региона:\n/1 - Адыгея\n/77 - Москва\n/44fz - только 44-ФЗ",
+        "🔔 Подписки на тендеры\n\n"
+        "📍 Выберите регион:\n"
+        "• /1 — Адыгея\n"
+        "• /77 — Москва\n"
+        "• /moscow — Москва\n"
+        "• /spb — СПб",
         reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text == '🔍 Поиск тендеров')
+@bot.message_handler(func=lambda m: 'Поиск тендеров' in m.text)
 def search_handler(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn_back = types.KeyboardButton('🔙 Назад в меню')
+    btn_back = types.KeyboardButton('🔙 Главное меню')
     markup.add(btn_back)
     bot.reply_to(message, 
         "🔍 Поиск тендеров\n\n"
-        "Примеры команд:\n• /moscow - Москва\n• /1 - Адыгея\n• /44fz - 44-ФЗ\n• /223fz - 223-ФЗ",
+        "💬 Введите:\n"
+        "• moscow — Москва\n"
+        "• 77 — Москва\n"
+        "• 44fz — только 44-ФЗ\n"
+        "• здание — обследование зданий",
         reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text == '📊 Статистика')
-def stats_handler(message):
+@bot.message_handler(func=lambda m: 'обследование зданий' in m.text)
+def buildings_handler(message):
     bot.reply_to(message, 
-        "📊 Статистика за 24ч:\n"
-        "• 127 новых тендеров\n"
-        "• 34 млн ₽ общая сумма\n"
-        "• Москва: 42 закупки\n"
-        "• 44-ФЗ: 89%\n"
-        "• 223-ФЗ: 11%")
+        "🏢 Тендеры 'обследование зданий'\n\n"
+        "🔄 Ищем по ЕИС 44-ФЗ/223-ФЗ...\n"
+        "• ОКПД2: 71.12.45\n"
+        "• Ключевые слова: обследование, здание\n\n"
+        "⏳ Результаты через 10 сек...")
 
-@bot.message_handler(func=lambda message: message.text == '❓ Помощь')
+@bot.message_handler(func=lambda m: 'Помощь' in m.text)
 def help_handler(message):
     bot.reply_to(message, 
-        "❓ Помощь по командам:\n\n"
-        "📍 Регионы:\n"
-        "• /1 - Адыгея\n"
-        "• /77 - Москва\n"
-        "• /moscow - Москва\n\n"
-        "📋 Типы:\n"
-        "• /44fz - 44-ФЗ\n"
-        "• /223fz - 223-ФЗ\n\n"
-        "🔙 /start - главное меню")
+        "❓ Помощь:\n\n"
+        "🔔 Подписки — уведомления 24/7\n"
+        "🔍 Поиск — найти тендеры\n"
+        "🏢 обследование зданий — спец. поиск\n"
+        "📊 Статистика — цифры по РФ\n\n"
+        "💬 Примеры: /moscow /1 /44fz")
 
-@bot.message_handler(func=lambda message: message.text == '🔙 Назад в меню')
-def back_to_menu(message):
+@bot.message_handler(func=lambda m: '🔙 Главное меню' in m.text)
+def back_menu(message):
     start_command(message)
 
-# Команда тендеров
-@bot.message_handler(commands=['tenders'])
-def tenders_command(message):
-    bot.reply_to(message, "🔄 Ищем свежие тендеры по всей РФ...")
-
-# Поиск по регионам (пример)
+# Дополнительные команды
 @bot.message_handler(commands=['moscow', '1', '77'])
 def region_command(message):
-    region = message.text[1:] if message.text.startswith('/') else message.text
-    bot.reply_to(message, f"🔍 Тендеры {region}:\n• Загружаем данные ЕИС...")
+    region = message.text[1:]
+    bot.reply_to(message, f"🔍 Тендеры {region} загружаем...")
 
 @app.route('/', methods=['POST'])
 def webhook():
